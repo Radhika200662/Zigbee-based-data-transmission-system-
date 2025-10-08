@@ -1,0 +1,31 @@
+#include <SoftwareSerial.h>
+SoftwareSerial xbee(2, 3); // RX, TX (Arduino pins)
+
+const int sensorPin = A0; // LM35 or any analog sensor
+const char nodeID[] = "NODE1";
+
+void setup() {
+  Serial.begin(9600);
+  xbee.begin(9600);
+  Serial.println("Zigbee Transmitter Started");
+}
+
+void loop() {
+  int raw = analogRead(sensorPin);
+  // For LM35: 10mV/°C, ADC ref 5V -> tempC = raw*(5.0/1023)*100
+  float voltage = raw * (5.0 / 1023.0);
+  float tempC = voltage * 100.0;
+
+  // Build payload: NODEID,TEMP (e.g. NODE1,26.53)
+  char payload[32];
+  snprintf(payload, sizeof(payload), "%s,%.2f", nodeID, tempC);
+
+  // Send via XBee
+  xbee.println(payload);
+
+  // Debug on serial monitor
+  Serial.print("Sent: ");
+  Serial.println(payload);
+
+  delay(1000); // 1 second interval
+}
